@@ -1,0 +1,13 @@
+zomato:
+  outputs:
+    dev:
+      type: snowflake
+      account: your_snowflake_account_id
+      user: your_snowflake_user
+      password: "your_password_here"
+      role: DBT_ROLE
+      database: ZOMATO
+      warehouse: ZOMATO_WH
+      schema: STAGING
+      threads: 8
+  target: dev

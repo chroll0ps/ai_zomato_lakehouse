@@ -1,0 +1,68 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --canvas-bg: #F7F3EA;
+  --sidebar-bg: #EFE9DC;
+  --ink-primary: #141413;
+  --accent-mustard: #F2C94C;
+}
+
+body {
+  background-color: #F7F3EA;
+  color: #141413;
+  font-feature-settings: "rlig" 1, "calt" 1;
+}
+
+.flagship-card {
+  border: 1.5px solid #141413;
+  box-shadow: 4px 4px 0px #141413;
+  transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.flagship-card-interactive {
+  cursor: pointer;
+}
+
+.flagship-card-interactive:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px #141413;
+}
+
+.marker-underline {
+  position: relative;
+  display: inline-block;
+  z-index: 1;
+}
+
+.marker-underline::after {
+  content: "";
+  position: absolute;
+  left: -4px;
+  right: -4px;
+  bottom: 2px;
+  height: 12px;
+  background-color: #F2C94C;
+  border-radius: 999px;
+  z-index: -1;
+}
+
+.custom-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: rgba(20, 20, 19, 0.22);
+  border-radius: 999px;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(20, 20, 19, 0.4);
+}
+
