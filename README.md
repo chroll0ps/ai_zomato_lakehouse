@@ -54,27 +54,37 @@ The end-to-end architecture is organized into five cohesive layers:
 
 ## 🌟 Key Platform Features
 
-### 1. Data Engineering & Medallion Lakehouse
-- **Medallion Architecture**: Fully decoupled Bronze (raw schema), Silver (staging cleaning views), and Gold (production facts, dimensions, and aggregated analytical marts).
-- **Automated Airflow Pipeline**: `zomato_batch` DAG handles idempotent Snowflake `COPY INTO` operations, multi-stage dbt compilation, asynchronous review enrichment, and downstream AI mart generation.
-- **Enterprise Star Schema**: Dimensions (`dim_restaurants`, `dim_customer`, `dim_food`, `dim_date`) linked with facts (`fct_orders`, `fact_order_items`) and high-performance pre-aggregated marts (`mart_daily_city_revenune`, `mart_restaurant_performance`, `mart_delivery_sla`, `mart_review_insights`).
+- 🏗️ **Data Engineering & Medallion Lakehouse Architecture**
+  - 🥉 **Bronze Tier (Raw Data Lake Ingestion)**: External Snowflake stages connected to Azure Blob Storage with automated, idempotent `COPY INTO` pipelines.
+  - 🥈 **Silver Tier (Staging Views)**: dbt staging models (`stg_orders`, `stg_reviews`, `stg_restaurants`, `stg_users`, `stg_food`, `stg_menu`) enforcing schema casting, deduplication, and data quality.
+  - 🥇 **Gold Tier (Production Star Schema & Marts)**: Production facts (`fct_orders`, `fact_order_items`), Kimball dimensions (`dim_restaurants`, `dim_customer`, `dim_food`, `dim_date`), and high-performance aggregate marts (`mart_daily_city_revenune`, `mart_restaurant_performance`, `mart_delivery_sla`).
+  - 🔄 **Automated Airflow Orchestration DAG**: `zomato_batch` containerized workflow orchestrating `reload_raw >> dbt_build_core >> enrich_reviews >> dbt_build_ai`.
 
-### 2. Generative AI & Retrieval-Augmented Generation (RAG)
-- **Batch Review Enrichment**: Leverages Groq-hosted `qwen/qwen3.8-27b` to classify customer sentiments (`positive`, `negative`, `neutral`), quantify sentiment scores (`-1.0` to `1.0`), detect primary topics (`food quality`, `delivery`, `pricing`, `service`, `packaging`), and extract key issue phrases into `ZOMATO.AI.REVIEW_ENRICHED`.
-- **High-Velocity Semantic Search**: Encodes reviews using `SentenceTransformer("all-MiniLM-L6-v2")` into normalized 384-dimensional dense vectors, cached in parquet format for low-latency cosine similarity ranking.
-- **Strict Grounded Synthesis**: Groq synthesizes contextual responses constrained strictly to top-$k$ retrieved reviews, preventing hallucinations.
+- 🧠 **AI Intelligence & Batch LLM Review Enrichment**
+  - 🏷️ **Automated Sentiment Classification**: Groq-hosted `qwen/qwen3.8-27b` classifies customer reviews into structured `positive`, `negative`, and `neutral` sentiment labels.
+  - 📈 **Continuous Sentiment Scoring**: Computes granular polarity scores from `-1.0` to `1.0` written directly to Snowflake's `AI.REVIEW_ENRICHED`.
+  - 🎯 **Topic & Issue Extraction**: Automatically tags key customer domains (`food quality`, `delivery`, `pricing`, `service`, `packaging`) and extracts concise 6-word issue summaries.
+  - ⚡ **Tag-Based dbt AI Modeling**: Downstream `mart_review_insights` builds automatically only after enrichment finishes via dbt's `--select tag:ai`.
 
-### 3. Safe, Governed Text-to-SQL
-- **Zero-Mutation SQL Guardrails**: Enforces read-only `SELECT`/`WITH` queries using strict regex word boundaries (`\bword\b`) blocking `DROP`, `DELETE`, `TRUNCATE`, `ALTER`, `UPDATE`, `INSERT`, `CREATE`, `REPLACE`, `GRANT`, `REVOKE`, and multi-statement semicolons.
-- **Least-Privilege Execution**: All analytical queries execute strictly under Snowflake's restricted `DBT_ROLE` scoped exclusively to the `MARTS` schema.
-- **Automatic Schema Normalization**: Seamlessly resolves table name variations and ensures aggregation consistency (e.g. `MART_DAILY_CITY_REVENUNE` with `SUM(gmv)`).
+- 🔍 **High-Velocity Semantic Vector Search (RAG Engine)**
+  - ⚡ **Local Dense Embedding Index**: Encodes customer feedback using `SentenceTransformer("all-MiniLM-L6-v2")` into 384-dimensional normalized dense vectors.
+  - 📂 **Zero-Latency Parquet Cache**: Precomputed vectors persist in `review_embeddings.parquet` for instant vector loading and cosine similarity search without remote API latency.
+  - 📍 **Dynamic City-Level Scoping**: Automatically filters vector search by sidebar city selection or automatically detects geographic mentions in natural queries.
+  - 🛡️ **Grounded Synthesis Guard**: Synthesizes concise answers strictly against top-$k$ retrieved reviews with zero hallucinations.
 
-### 4. Senior-Architected ChatGPT Flagship Web Platform
-- **Design Aesthetic**: Neo-brutalist editorial layout combining warm cream `#F7F3EA`, warm sand `#EFE9DC`, solid charcoal `#141413` buttons, and editorial mustard `#F2C94C` accents with hard offset shadows.
-- **Dynamic Recharts Visualization**: Automatically detects numeric 2-column query results and renders responsive SVG bar charts with hover tooltips, value formatting, and a toggle to inspect the full scrollable Data Table.
-- **Dual Intelligence Routing**: Intelligent intent router automatically detects whether a prompt is qualitative (routes to RAG), quantitative (routes to SQL), or hybrid (executes both in parallel and presents a unified dual report).
-- **Inspect Retrieved Reviews Drawer**: Interactive drawer displaying real customer comments, star ratings (`X/5 ★`), city tags, and semantic match percentages.
-- **SSR-Safe Thread Persistence**: Full `localStorage` conversation persistence with zero React hydration warnings, active thread switching, "+ New Chat", and individual thread deletion.
+- 🛡️ **Enterprise Governed Text-to-SQL Guardrails**
+  - 🔒 **Read-Only AST & Regex Guard**: Enforces strict `SELECT`/`WITH` query boundaries with whole-word regex (`\bword\b`), blocking all DDL/DML mutations (`DROP`, `DELETE`, `UPDATE`, `INSERT`).
+  - 🚫 **Multi-Statement Injection Defense**: Rejects stacked semicolon-delimited SQL to eliminate injection vectors.
+  - 🔑 **Least-Privilege Role Access**: Restricts database execution strictly to Snowflake's `DBT_ROLE` scoped only to the `MARTS` schema.
+  - 🔄 **Schema Aliasing Resilience**: Automatically handles schema discrepancies and aggregates daily records with `SUM(gmv)`.
+
+- 💻 **Flagship Web Platform (Next.js 14 App Router + FastAPI)**
+  - 🎨 **Neo-Brutalist Visual Design System**: High-contrast editorial aesthetic featuring Warm Cream (`#F7F3EA`), Warm Sand (`#EFE9DC`), Charcoal buttons (`#141413`), and Mustard accents (`#F2C94C`).
+  - 📊 **Responsive Recharts Visualizations**: Auto-detects 2-column numeric metrics and generates interactive bar charts with hover tooltips, value formatting, and a toggle to inspect the full Data Table.
+  - 🔀 **Intelligent Intent Routing (Auto / RAG / SQL / Dual)**: Evaluates prompts to route qualitative inquiries to RAG, business metrics to SQL, and hybrid queries to dual side-by-side payloads.
+  - 💬 **Expandable Customer Reviews Drawer**: Live collapsible drawer displaying real Snowflake customer feedback, star rating pills (`X/5 ★`), city tags, and match score percentages.
+  - 📋 **Copy SQL Confirmation**: One-click SQL snippet copying with animated `"Copied!"` confirmation badge and collapsible code viewer.
+  - 💾 **SSR-Safe Thread Persistence**: Complete `localStorage` session persistence with zero React hydration warnings, dynamic city filtering, and thread management.
 
 ---
 
@@ -83,8 +93,7 @@ The end-to-end architecture is organized into five cohesive layers:
 ```text
 chrollo_zomato_pipline/
 ├── reference/
-│   ├── system architecture.png      # End-to-end production architecture diagram
-│   └── zomato_ai_flagship_platform.tsx # Reference flagship UI specifications
+│   └── system architecture.png      # End-to-end production architecture diagram
 ├── airflow/
 │   ├── dags/
 │   │   └── zomato_batch.py          # Airflow DAG (reload_raw >> dbt_build >> enrich >> dbt_ai)
