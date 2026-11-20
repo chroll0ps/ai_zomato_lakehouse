@@ -1,6 +1,4 @@
-# ============================================================================
-# Git Ignore - Zomato AI Flagship Platform & Data Engineering Pipeline
-# ============================================================================
+
 
 # Environment variables & secrets (CRITICAL)
 .env
